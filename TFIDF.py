@@ -1,12 +1,18 @@
 import nltk
 from collections import Counter
-from nltk import word_tokenize
+from nltk import word_tokenize 
 from os import listdir
 import math
 from token_helpers import *
 from os.path import isfile, join
 from nltk.corpus import stopwords
 lemma = nltk.WordNetLemmatizer()
+
+def tup_to_lower(tup) :
+    new = []
+    for i in range(0, len(tup)) :
+        new.append(tup[i].lower())
+    return tuple(new)
 
 def tokenize_doc(filepath) :
     f = open(filepath, "r")
@@ -41,6 +47,8 @@ class TFIDF :
             freq_dict = Counter(toks)
             for item in freq_dict.items() :
                 # ITEM : (Key, Freq)
+                tup = tup_to_lower(item[0])
+                item = (tup, item[1])
                 self.count_freq(item[0], item[1])
                 self.count_doc(item[0])
         self.ordered_term_frequency = sorted(self.term_freq.items(), \
@@ -53,13 +61,14 @@ class TFIDF :
             ''' If frequency is zero, the TF/IDF is also zero (divide by zero for
             IDF)'''
             return 0
+        term = term.lower()
         tf = 0.5 + float(0.5*self.term_freq[term]) / float(self.max_freq)
         idf = math.log(self.num_docs/float(self.term_docnum[term]),2)
         return tf*idf
 
     def idf(self,term) :
         ''' Calculate just the idf '''
-        term = term.lower()
+        term = tuple(term.lower())
         if not self.term_docnum.has_key(term) :
             return 0
         return math.log(self.num_docs/float(self.term_docnum[term]),2)
